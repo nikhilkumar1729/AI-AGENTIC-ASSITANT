@@ -1,0 +1,24 @@
+from fastapi import FastAPI, HTTPException
+from pydantic import BaseModel
+from .agent import get_agent_executor
+
+app = FastAPI(title="Agentic AI API")
+agent_executor = get_agent_executor()
+
+class Query(BaseModel):
+    text: str
+
+@app.post("/chat")
+async def chat(query: Query):
+    try:
+        response = agent_executor.invoke({
+            "input": query.text,
+            "chat_history": [] # You can persist this in Redis/Postgres
+        })
+        return {"response": response["output"]}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+if __name__ == "__main__":
+    import uvicorn
+    uvicorn.run(app, host="0.0.0.0", port=8000)
