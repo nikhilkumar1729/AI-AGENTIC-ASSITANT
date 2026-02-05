@@ -1,0 +1,54 @@
+import os
+from langchain.tools import tool
+from langchain_community.tools import DuckDuckGoSearchRun
+from pypdf import PdfReader
+
+# 1. Web Search Tool
+search = DuckDuckGoSearchRun()
+
+@tool
+def web_search(query: str):
+    
+    return search.run(query)
+
+@tool
+def summarize_pdf(file_path: str):
+    
+    if not os.path.exists(file_path):
+        return 
+    
+    reader = PdfReader(file_path)
+    text = ""
+    for page in reader.pages[:5]:  
+        text += page.extract_text()
+    
+    return f"PDF Content Preview: {text[:1000]}..." 
+
+@tool
+def update_user_record(user_id: int, status: str):
+    """Updates the user status in the internal database."""
+   
+    return f"Successfully updated User {user_id} to status: {status}"
+
+    from langchain_google_genai import ChatGoogleGenerativeAI
+from langchain.agents import AgentExecutor, create_tool_calling_agent
+from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
+from .tools import web_search, summarize_pdf, update_user_record
+
+def get_agent_executor():
+    # Initialize Gemini 1.5 Flash (Fast and Tool-capable)
+    llm = ChatGoogleGenerativeAI(model="gemini-1.5-flash", temperature=0)
+
+    tools = [web_search, summarize_pdf, update_user_record]
+
+    prompt = ChatPromptTemplate.from_messages([
+        ("system", "You are a helpful AI assistant that can execute tasks using tools."),
+        MessagesPlaceholder(variable_name="chat_history"),
+        ("human", "{input}"),
+        MessagesPlaceholder(variable_name="agent_scratchpad"),
+    ])
+
+    # Construct the Tool Calling Agent
+    agent = create_tool_calling_agent(llm, tools, prompt)
+    
+    return AgentExecutor(agent=agent, tools=tools, verbose=True)
