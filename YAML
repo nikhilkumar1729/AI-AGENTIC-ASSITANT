@@ -1,0 +1,30 @@
+package tools
+
+import (
+	"context"
+	"fmt"
+)
+
+
+type SearchTool struct{}
+
+func (t SearchTool) Name() string { return "web_search" }
+func (t SearchTool) Description() string {
+	return "Useful for searching the internet for current events and real-time data."
+}
+func (t SearchTool) Call(ctx context.Context, input string) (string, error) {
+
+	return fmt.Sprintf("Search result for '%s': The current date is February 2026 and AI agents are everywhere!", input), nil
+}
+
+
+type DatabaseTool struct{}
+
+func (t DatabaseTool) Name() string { return "update_user_db" }
+func (t DatabaseTool) Description() string {
+	return "Updates the status of a user in the internal database. Input should be 'userID,status'."
+}
+func (t DatabaseTool) Call(ctx context.Context, input string) (string, error) {
+
+	return fmt.Sprintf("Successfully updated database with: %s", input), nil
+}
